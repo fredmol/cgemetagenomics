@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ name }} - Metagenomics Analysis</title>
+    <!-- Page-specific print styles -->
+    <style>
+        @page {
+            margin: 2.5cm 1.5cm;
+        }
+        
+        /* Footer Elements Configuration */
+        #footer-logo {
+            position: running(footer-logo);
+        }
+        
+        #footer-version {
+            position: running(footer-version);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 9pt;
+            color: var(--text-secondary);
+            text-align: center;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+        }
+        
+        #footer-text {
+            position: running(footer-text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 6pt;
+            color: var(--text-secondary);
+            text-align: right;
+            line-height: 1.3;
+        }
+    </style>
+</head>
+<body>
+    <!-- =====================
+         Footer Components 
+         ===================== -->
+    <div id="footer-logo">
+        <img src="{{ logo_data_url }}" alt="Company Logo">
+    </div>
+
+    <div id="footer-version">
+        cgemetagenomics v{{ version }}
+    </div>
+
+    <div id="footer-text">
+        Center for Genomic Epidemiology<br>
+        National Food Institute<br>
+        Technical University of Denmark
+    </div>
+
+    <!-- =====================
+         Main Report Container 
+         ===================== -->
+    <div class="report-container">
+        <!-- Report Header Section -->
+        <div class="report-header">
+            <div class="header-content">
+                <h1>CGE Metagenomics Analysis Report</h1>
+                
+                <!-- Basic Information -->
+                <div class="report-info">
+                    <div class="info-item">
+                        <span class="label">Sample name:&nbsp&nbsp&nbsp</span>
+                        <span class="value">{{ name }}</span>
+                    </div>
+                </div>
+                <div class="report-info">
+                    <div class="info-item">
+                        <span class="label">Report Date:&nbsp&nbsp&nbsp</span>
+                        <span class="value">{{ date }}</span>
+                    </div>
+                </div>
+                
+                <!-- File Statistics -->
+                <div class="file-stats">
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <span class="label">Input File:&nbsp&nbsp&nbsp</span>
+                            <span class="value">{{ file_stats.file_name }}</span>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <span class="label">Total Reads:&nbsp&nbsp&nbsp</span>
+                            <span class="value">{{ file_stats.read_count }}</span>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <span class="label">File Size:&nbsp&nbsp&nbsp</span>
+                            <span class="value">{{ file_stats.file_size }}</span>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <span class="label">Mapping software (KMA) version:&nbsp&nbsp&nbsp</span>
+                            <span class="value">{{ file_stats.kma_version }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================
+             Metrics Overview Sections 
+             ===================== -->
+        <!-- Primary Metrics -->
+        <div class="section metrics-overview">
+            <div class="metric-card">
+                <span class="metric-value">{{ pathogen_count }}</span>
+                <span class="metric-label">Pathogens Identified</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-value">{{ amr_count }}</span>
+                <span class="metric-label">AMR Genes Detected</span>
+            </div>
+			<div class="metric-card">
+				<span class="metric-value">{{ class_count }}</span>
+				<span class="metric-label">AMR Classes</span>
+			</div>
+        </div>
+
+        <!-- =====================
+             Analysis Results Sections 
+             ===================== -->
+        <!-- Pathogen Analysis -->
+        <div class="section main-section">
+            <h2>Pathogen Analysis</h2>
+            <div class="data-table-container">
+                {% if pathogens %}
+                <table class="analysis-table">
+                    <thead>
+                        <tr>
+                            <th>Pathogen</th>
+                            <th>Identity (%)</th>
+                            <th>Coverage (%)</th>
+                            <th>Depth</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pathogen in pathogens %}
+                        <tr>
+                            <td>{{ pathogen['#Template'] }}</td>
+                            <td>{{ pathogen['Template_Identity'] }}</td>
+                            <td>{{ pathogen['Template_Coverage'] }}</td>
+                            <td>{{ pathogen['Depth'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    No pathogens detected in this sample
+                </div>
+                {% endif %}
+            </div>
+        </div>
+		
+		<!-- Resistance Classes Overview -->
+		<div class="section main-section amr-overview-section">
+			<h2>AMR Class Overview</h2>
+			<div class="amr-class-grid">
+				{% for class_info in amr_class_stats %}
+				<div class="amr-class-card">
+					<div class="class-name">{{ class_info.name }}</div>
+					<div class="stats">
+						<div class="class-count">{{ class_info.gene_count }}</div>
+						<div class="class-label">GENES FOUND</div>
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+			<div class="total-classes">{{ class_count }} Classes Total</div>
+		</div>
+		
+		
+		<!-- =====================
+		 Visualization Sections 
+		 ===================== -->
+        <!-- Bacterial Composition -->
+        <div class="section plot-section">
+            <h2>Bacterial Composition</h2>
+            <div class="plot-container">
+                <img src="data:image/png;base64,{{ coverage_plot }}" 
+                     alt="Bacterial Coverage Plot">
+            </div>
+            <div class="plot-description">
+                Distribution of bacterial species found in the sample, showing relative coverage percentages.
+            </div>
+        </div>
+
+        <!-- AMR Circle Plot -->
+        <div class="section plot-section">
+            <h2>AMR Gene Distribution</h2>
+            <div class="plot-container">
+                <img src="data:image/png;base64,{{ circle_plot }}" 
+                     alt="AMR Gene Distribution">
+            </div>
+            <div class="plot-description">
+                Distribution of AMR genes across different drug classes, showing relative abundance based on read depth.
+            </div>
+        </div>
+		
+        <!-- =====================
+		 Analysis Results Sections  2
+		 ===================== -->
+        
+        <!-- Resistance Classes Detailed -->
+		<div class="section main-section">
+			<h2>AMR Class Distribution</h2>
+			<div class="amr-class-container">
+				<table class="analysis-table">
+					<thead>
+						<tr>
+							<th>Drug Class</th>
+							<th>Gene Count</th>
+							<th>Average Depth</th>
+							<th>Average Coverage (%)</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for class_info in amr_class_stats %}
+						<tr>
+							<td>{{ class_info.name }}</td>
+							<td>{{ class_info.gene_count }}</td>
+							<td>{{ class_info.avg_depth }}</td>
+							<td>{{ class_info.avg_coverage }}</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+        <!-- AMR Genes -->
+        <div class="section main-section">
+            <h2>Antimicrobial Resistance Genes</h2>
+            <div class="data-table-container">
+                <table class="analysis-table">
+                    <thead>
+                        <tr>
+                            <th>Gene</th>
+                            <th>Class</th>
+                            <th>Identity (%)</th>
+                            <th>Coverage (%)</th>
+                            <th>Depth</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in amr_results %}
+                        <tr class="{{ result.match_quality }}">
+                            <td>{{ result['#Template'] }}</td>
+                            <td>{{ result['Class'] }}</td>
+                            <td>{{ result['Template_Identity'] }}</td>
+                            <td>{{ result['Template_Coverage'] }}</td>
+                            <td>{{ result['Depth'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
